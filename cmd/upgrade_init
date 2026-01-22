@@ -1,0 +1,6 @@
+#!/bin/bash
+
+### 在用户升级应用程序之前调用此脚本。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 在用户升级应用程序之前调用此脚本" >> /var/log/rtp2http.log
+
+exit 0

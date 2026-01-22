@@ -1,0 +1,6 @@
+#!/bin/bash
+
+### 该脚本在用户升级应用程序后调用。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_callback] 该脚本在用户升级应用程序后调用" >> /var/log/rtp2http.log
+
+exit 0

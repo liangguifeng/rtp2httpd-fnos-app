@@ -1,0 +1,6 @@
+#!/bin/bash
+
+### 该脚本在用户卸载应用程序前被调用。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [uninstall_init] 该脚本在用户卸载应用程序前被调用" >> /var/log/rtp2http.log
+
+exit 0

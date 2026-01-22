@@ -1,0 +1,6 @@
+#!/bin/bash
+
+### 用户安装应用程序后调用此脚本。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [install_callback] 用户安装应用程序后调用此脚本" >> /var/log/rtp2http.log
+
+exit 0

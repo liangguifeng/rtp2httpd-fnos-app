@@ -1,0 +1,6 @@
+#!/bin/bash
+
+### 用户在应用程序设置页面中更改环境变量后调用此脚本。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 用户在应用程序设置页面中更改环境变量后调用此脚本" >> /var/log/rtp2http.log
+
+exit 0

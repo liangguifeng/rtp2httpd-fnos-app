@@ -1,0 +1,17 @@
+#!/bin/bash
+
+### 该脚本在用户卸载应用程序后被调用。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [uninstall_callback] 该脚本在用户卸载应用程序后被调用" >> /var/log/rtp2http.log
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [uninstall_callback] 用户卸载应用，数据保留选项为：${wizard_data_action:-}" >> /var/log/rtp2http.log
+if [ "${wizard_data_action:-}" == "delete" ]; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - [uninstall_callback] 开始删除用户数据" >> /var/log/rtp2http.log
+  rm -rf ${TRIM_PKGETC}
+  rm -rf ${TRIM_PKGMETA}
+  rm -rf ${TRIM_PKGHOME}
+  rm -rf ${TRIM_PKGVAR}
+  IFS=':'; for p in $TRIM_DATA_SHARE_PATHS; do [ -e "$p" ] && rm -rf "$p"; done
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - [uninstall_callback] 删除用户数据完成" >> /var/log/rtp2http.log
+fi
+
+exit 0
