@@ -13,6 +13,5 @@ desktop_uidir         = ui
 desktop_applaunchname = rtp2httpd.Application
 service_port          = 5140
 checkport             = true
-install_type          = root
 reloadui              = yes
 changelog             = <h3>更新日志</h3><ul><li>网页播放器：频道 logo 图片加载使用 no-referrer policy，避免防盗链导致图片加载失败</li><li>修复在极少情况下 RTSP 连接卡在 TEARDOWN 状态且一直不会释放的问题</li><li>设置 UDP RCVBUF 时尝试使用 SO_RCVBUFFORCE，以突破内核参数 net.core.rmem_max 限制，可改善 4K 视频流偶尔花屏马赛克问题</li><li>修复对于一些特殊 RTSP 上游，断开连接时出现 RTSP: Socket event handling failed 报错</li></ul>

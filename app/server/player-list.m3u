@@ -1,4 +1,4 @@
-#EXTM3U x-tvg-url="http://epg.51zmt.top:8000/e.xml.gz"
+#EXTM3U x-tvg-url="https://tv.mxdyeah.top/epgphp/t.xml.gz"
 
 #EXTINF:-1 tvg-id="CCTV1" tvg-name="CCTV1" tvg-logo="https://upload.112114.xyz/logo/CCTV1.png" group-title="央视",CCTV-1
 rtp://239.253.64.120:5140/?fcc=10.255.75.73:15970

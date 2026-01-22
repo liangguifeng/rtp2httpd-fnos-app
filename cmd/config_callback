@@ -3,4 +3,119 @@
 ### 用户在应用程序设置页面中更改环境变量后调用此脚本。
 echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 用户在应用程序设置页面中更改环境变量后调用此脚本" >> /var/log/rtp2http.log
 
+LOG_FILE=/var/log/rtp2http.log
+CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 重新生成配置文件: $CONF_FILE" >> "$LOG_FILE"
+
+# 删除旧配置
+rm -f "$CONF_FILE"
+
+# 重新生成配置
+cat > "$CONF_FILE" <<EOF
+[global]
+# 日志详细程度: 0=FATAL 1=ERROR 2=WARN 3=INFO 4=偶看
+verbosity = ${wizard_verbosity:-3}
+
+# 最大并发客户端数
+maxclients = ${wizard_maxclients:-20}
+
+# UDPxy 兼容性
+udpxy = ${wizard_udpxy:-yes}
+
+# 工作进程数（默认: 1）
+workers = ${wizard_workers:-1}
+
+# 公网访问建议
+# 检查 HTTP 请求的 Host 头 (默认：无)
+hostname = ${wizard_hostname:-}
+
+# 启用后，将使用 HTTP X-Forwarded-For 头作为客户端地址，用于显示在状态面板上 (默认：no)
+# 并接受 X-Forwarded-Host / X-Forwarded-Proto 头作为 playlist.m3u 中的地址前缀
+# 建议仅在使用反向代理时启用
+xff = ${wizard_xff:-no}
+
+# HTTP 请求认证令牌（可选，默认: 无）
+# 设置后，所有 HTTP 请求必须携带 r2h-token 查询参数，且值与此配置匹配
+# 例如:
+# http://server:5140/rtp/239.253.64.120:5140?fcc=10.255.14.152:15970&r2h-token=your-secret-token
+# http://server:5140/player?r2h-token=your-secret-token
+r2h-token = ${wizard_r2h_token:-}
+
+# 状态页路径（默认: /status）
+status-page-path = ${wizard_status_page_path:-/status}
+
+# 播放器页路径（默认: /player）
+player-page-path = ${wizard_player_page_path:-/player}
+
+# 上游网络接口配置 (可选)
+# 简单配置：只配置一个默认接口，所有流量类型都使用此接口
+# 高级配置：为不同流量类型配置专用接口
+# 注意：专用接口配置优先级高于默认接口
+# upstream-interface-multicast = eth0  # 组播流量 (RTP/UDP)
+# upstream-interface-fcc = eth1        # FCC
+# upstream-interface-rtsp = eth2       # RTSP
+#
+# 混合配置示例：默认使用 eth0，但 FCC 使用更快的 eth1
+# upstream-interface = eth0
+# upstream-interface-fcc = eth1
+#
+# 优先级：upstream-interface-{multicast,fcc,rtsp} > upstream-interface > 系统路由表
+upstream-interface = ${wizard_upstream_interface:-enp2s0}
+
+# 外部 M3U 配置（支持 file://, http://, https://）
+# 注意：HTTP/HTTPS 需要安装 curl 命令
+external-m3u = ${wizard_external_m3u:-file://${TRIM_PKGHOME}/player-list.m3u}
+
+# 外部 M3U 更新间隔（秒）
+# 默认 7200（2 小时），设为 0 禁用自动更新
+external-m3u-update-interval = ${wizard_external_m3u_update_interval:-7200}
+
+# 组播周期性重新加入间隔（秒，默认: 0 禁用）
+# 设置为正值（如 60）以周期性重新加入组播组
+# 这是针对以下网络环境的兼容性解决方案：
+# - 启用 IGMP snooping 的交换机在没有路由器 IGMP Query 时超时
+# - 配置不当的网络设备会丢弃组播成员关系
+# 推荐值: 30-120 秒（小于典型交换机超时 260 秒）
+# 注意：默认禁用（0），仅在遇到组播流中断时才需要启用
+mcast-rejoin-interval = ${wizard_mcast_rejoin_interval:-0}
+
+# FCC 监听媒体流端口范围（可选，格式: 起始-结束，默认随机端口）
+fcc-listen-port-range = ${wizard_fcc_port_range:-40000-40100}
+
+# 缓冲池最大缓冲区数量（默认: 16384）
+# 每个缓冲区 1536 字节，16384 个约占用 24MB 内存
+# 增大此值以提高多客户端并发时的吞吐量，例如设置为 32768 或更高
+buffer-pool-max-size = ${wizard_buffer_pool_max_size:-16384}
+
+# 启用零拷贝发送以提升性能（默认: no）
+# 设为 yes/true/on/1 以启用零拷贝
+# 需要内核支持 MSG_ZEROCOPY (Linux 4.14+)
+# 在支持的设备上可提升吞吐量并降低 CPU 占用，特别是在高并发负载下
+# 如果你的 rtp2httpd 位于反向代理之后 (nginx/caddy/lucky 等)，不建议开启这个选项
+zerocopy-on-send = ${wizard_zerocopy_on_send:-no}
+
+# 启用视频快照功能（默认: yes）
+# 启用后可通过 `snapshot=1` 查询参数获取视频流的实时快照
+video-snapshot = ${wizard_video_snapshot:-yes}
+
+# FFmpeg 可执行文件路径（默认: ffmpeg，使用系统 PATH）
+# 如果 ffmpeg 不在 PATH 中或想使用特定版本，请指定完整路径
+ffmpeg-path = ${wizard_ffmpeg_path:-/usr/bin/ffmpeg}
+
+# FFmpeg 额外参数（默认: -hwaccel none）
+# 这些参数在生成快照时传递给 ffmpeg
+# 常用选项: -hwaccel none, -hwaccel auto, -hwaccel vaapi, -hwaccel qsv
+ffmpeg-args = ${wizard_ffmpeg_args:--hwaccel none}
+
+EOF
+
+cat >> "$CONF_FILE" <<EOF
+[bind]
+# 监听所有地址的 5140 端口
+* ${wizard_port:-5140}
+EOF
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 配置生成成功" >> "$LOG_FILE"
+
 exit 0

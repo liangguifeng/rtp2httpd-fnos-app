@@ -1,6 +1,6 @@
 {
     ".url": {
-        "rtp2httpd.status.Application": {
+        "rtp2httpd.Application": {
             "title": "rtp2http面板",
             "icon": "images/icon_{0}.png",
             "type": "url",
@@ -9,7 +9,7 @@
             "url": "/status",
             "allUsers": true
         },
-        "rtp2httpd.player.Application": {
+        "rtp2httpd.Application.player": {
             "title": "rtp2http播放器",
             "icon": "images/icon_{0}.png",
             "type": "url",

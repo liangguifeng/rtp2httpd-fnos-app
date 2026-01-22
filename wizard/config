@@ -1,23 +1,15 @@
 [
   {
-    "stepTitle": "配置向导",
+    "stepTitle": "基础设置",
     "items": [
       {
         "type": "tips",
-        "helpText": "欢迎使用我们的应用！"
-      },
-      {
-        "type": "tips",
-        "helpText": "完整配置文件路径：<code>/应用安装的存储空间/@appconf/rtp2httpd/rtp2httpd.conf</code>"
-      },
-      {
-        "type": "tips",
-        "helpText": "详细参数请阅读： <a target=\"_blank\" href=\"https://github.com/stackia/rtp2httpd/blob/main/docs/configuration.md\">配置文档</a>。"
+        "helpText": "这些是最常用配置，绝大多数用户只需要配置本页即可。"
       },
       {
         "type": "text",
         "field": "wizard_port",
-        "label": "端口号",
+        "label": "服务监听端口",
         "initValue": "5140",
         "rules": [
           {
@@ -26,55 +18,193 @@
           },
           {
             "pattern": "^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4})$",
-            "message": "端口号只能包含 0-65535 之间的数字"
+            "message": "端口号范围必须是 0-65535"
           }
         ]
       },
       {
-        "type": "radio",
+        "type": "switch",
         "field": "wizard_udpxy",
-        "label": "udpxy兼容",
-        "initValue": "yes",
-        "options": [
-          {
-            "label": "开启",
-            "value": "yes"
-          },
-          {
-            "label": "关闭",
-            "value": "no"
-          }
-        ],
+        "label": "UDPxy 兼容模式",
+        "initValue": "true"
+      },
+      {
+        "type": "text",
+        "field": "wizard_upstream_interface",
+        "label": "默认上游网络接口",
+        "initValue": "enp2s0",
         "rules": [
           {
             "required": true,
-            "message": "udpxy兼容"
+            "message": "请输入网卡名称"
+          },
+          {
+            "pattern": "^[a-zA-Z0-9_]+$",
+            "message": "只能包含字母、数字和下划线"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stepTitle": "播放源配置",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "配置 IPTV 播放列表来源（M3U）。"
+      },
+      {
+        "type": "text",
+        "field": "wizard_external_m3u",
+        "label": "外部 M3U 地址(支持 file://, http://, https://)",
+        "initValue": "",
+        "rules": [
+          {
+            "pattern": "^(http|https|file)://.+$",
+            "message": "必须是 http(s):// 或 file:// 格式"
           }
         ]
       },
       {
         "type": "text",
-        "field": "wizard_upstream_interface",
-        "label": "上游网络接口",
-        "initValue": "enp0s3",
+        "field": "wizard_external_m3u_update_interval",
+        "label": "M3U 自动更新间隔（秒）",
+        "initValue": "7200",
         "rules": [
           {
-            "required": true,
-            "message": "请输入上游网络接口"
-          },
+            "pattern": "^[0-9]+$",
+            "message": "必须是数字"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stepTitle": "视频快照与 FFmpeg（高级）",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "仅在需要截图功能时配置，普通用户可忽略。"
+      },
+      {
+        "type": "switch",
+        "field": "wizard_video_snapshot",
+        "label": "启用视频快照",
+        "initValue": "true"
+      },
+      {
+        "type": "text",
+        "field": "wizard_ffmpeg_path",
+        "label": "FFmpeg 路径",
+        "initValue": "/usr/bin/ffmpeg"
+      },
+      {
+        "type": "text",
+        "field": "wizard_ffmpeg_args",
+        "label": "FFmpeg 参数",
+        "initValue": "-hwaccel none"
+      }
+    ]
+  },
+  {
+    "stepTitle": "访问与安全",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "如果你打算公网访问，建议认真配置本页。"
+      },
+      {
+        "type": "text",
+        "field": "wizard_hostname",
+        "label": "HTTP Host 校验",
+        "initValue": ""
+      },
+      {
+        "type": "switch",
+        "field": "wizard_xff",
+        "label": "启用 X-Forwarded-For",
+        "initValue": "false"
+      },
+      {
+        "type": "password",
+        "field": "wizard_r2h_token",
+        "label": "访问认证 Token",
+        "initValue": ""
+      },
+      {
+        "type": "text",
+        "field": "wizard_status_page_path",
+        "label": "状态页面路径",
+        "initValue": "/status"
+      },
+      {
+        "type": "text",
+        "field": "wizard_player_page_path",
+        "label": "播放器页面路径",
+        "initValue": "/player"
+      }
+    ]
+  },
+  {
+    "stepTitle": "性能与稳定性",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "以下配置适合多客户端或网络不稳定环境，普通用户可保持默认。"
+      },
+      {
+        "type": "text",
+        "field": "wizard_maxclients",
+        "label": "最大并发客户端数",
+        "initValue": "20",
+        "rules": [
           {
-            "pattern": "^[a-zA-Z0-9_]+$",
-            "message": "上游网络接口只能包含字母、数字和下划线"
+            "pattern": "^[1-9][0-9]*$",
+            "message": "必须为正整数"
           }
         ]
       },
       {
-        "type": "tips",
-        "helpText": "上游网络接口值得是您访问rtp流所需的网络接口名称，请您在【系统设置】->【网络设置】中查看您的网口，并复制您访问rtp流的对应网口名称，如：enp0s3"
+        "type": "text",
+        "field": "wizard_workers",
+        "label": "工作进程数",
+        "initValue": "1",
+        "rules": [
+          {
+            "pattern": "^[1-9][0-9]*$",
+            "message": "必须为正整数"
+          }
+        ]
       },
       {
-        "type": "tips",
-        "helpText": "<img src=\"https://cdn.shenmeyun.com/uPic/MacBookPro-2019/zOKCoF.png\" alt=\"网络设置图片\" width=\"600\" height=\"300\">"
+        "type": "text",
+        "field": "wizard_buffer_pool_max_size",
+        "label": "缓冲池大小",
+        "initValue": "16384",
+        "rules": [
+          {
+            "pattern": "^[0-9]+$",
+            "message": "必须为数字"
+          }
+        ]
+      },
+      {
+        "type": "switch",
+        "field": "wizard_zerocopy_on_send",
+        "label": "启用零拷贝发送",
+        "initValue": "false"
+      },
+      {
+        "type": "text",
+        "field": "wizard_fcc_port_range",
+        "label": "FCC 端口范围",
+        "initValue": "40000-40100"
+      },
+      {
+        "type": "text",
+        "field": "wizard_mcast_rejoin_interval",
+        "label": "组播重新加入间隔（秒）",
+        "initValue": "0"
       }
     ]
   }
