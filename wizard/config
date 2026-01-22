@@ -132,7 +132,7 @@
         "type": "switch",
         "field": "wizard_xff",
         "label": "启用 X-Forwarded-For",
-        "initValue": "false"
+        "initValue": "true"
       },
       {
         "type": "password",

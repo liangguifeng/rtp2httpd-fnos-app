@@ -9,7 +9,7 @@
             "url": "/status",
             "allUsers": true
         },
-        "rtp2httpd.Application.player": {
+        "rtp2httpd.Player": {
             "title": "rtp2http播放器",
             "icon": "images/icon_{0}.png",
             "type": "url",
