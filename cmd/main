@@ -5,7 +5,18 @@ PID_FILE="${TRIM_PKGVAR}/app.pid"
 CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
 
 # 写入程序启动命令
-CMD="${TRIM_APPDEST}/server/rtp2httpd --config ${CONF_FILE}"
+case "${TRIM_SYS_ARCH}" in
+  arm)
+    CMD="${TRIM_APPDEST}/server/rtp2httpd-3.11.0-aarch64 --config ${CONF_FILE}"
+    ;;
+  x86)
+    CMD="${TRIM_APPDEST}/server/rtp2httpd-3.11.0-x86_64 --config ${CONF_FILE}"
+    ;;
+  *)
+    echo "暂不支持当前结构：${TRIM_SYS_ARCH}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+    ;;
+esac
 
 log_msg() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> ${LOG_FILE}

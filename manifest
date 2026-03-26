@@ -2,7 +2,7 @@ appname               = rtp2httpd
 version               = 3.11.0
 display_name          = rtp2httpd
 desc                  = <h2>rtp2httpd - IPTV 流媒体转发服务器</h2><p><strong>rtp2httpd</strong> 是一个多媒体流转发服务器，基于 <a href="https://github.com/oskar456/rtp2httpd" target="_blank">oskar456/rtp2httpd</a> 重写，专为中国大陆 IPTV 环境设计。</p><h3>✨ 核心功能</h3><ul><li><strong>多协议支持：</strong>组播 RTP/UDP 转单播 HTTP，RTSP 转 HTTP，支持 M3U/M3U8</li><li><strong>FCC 快速换台：</strong>毫秒级换台响应，媲美原生机顶盒体验</li><li><strong>实时状态监控：</strong>Web 状态页面显示客户端连接、带宽和传输量</li><li><strong>内置 Web 播放器：</strong>浏览器直接播放，支持时移回看</li><li><strong>高性能优化：</strong>非阻塞 IO、多核优化、缓冲池共享、零拷贝</li></ul><h3>📖 文档 & 资源</h3><ul><li><a href="https://github.com/liangguifeng/rtp2httpd-fnos-app" target="_blank">GitHub 仓库</a> - 安装指南、配置参数、M3U 使用说明</li><li><a href="https://www.right.com.cn/forum/thread-8461513-1-1.html" target="_blank">论坛教程</a> - IPTV 内网融合、组播转单播实例</li></ul>
-arch                  = x86_64
+platform              = all
 source                = thirdparty
 maintainer            = stackia
 maintainer_url        = https://github.com/stackia/rtp2httpd
@@ -14,4 +14,4 @@ desktop_applaunchname = rtp2httpd.Application
 service_port          = 5140
 checkport             = true
 reloadui              = yes
-changelog             = <h3>更新日志</h3><ul><li>默认上游网络接口支持横线(-)格式</li><li>更新 rtp2httpd 版本到 3.11.0</li><li>网页播放器：频道 logo 图片加载使用 no-referrer policy，避免防盗链导致图片加载失败</li><li>修复在极少情况下 RTSP 连接卡在 TEARDOWN 状态且一直不会释放的问题</li><li>设置 UDP RCVBUF 时尝试使用 SO_RCVBUFFORCE，以突破内核参数 net.core.rmem_max 限制，可改善 4K 视频流偶尔花屏马赛克问题</li><li>修复对于一些特殊 RTSP 上游，断开连接时出现 RTSP: Socket event handling failed 报错</li></ul>
+changelog             = <h3>更新日志</h3><ul><li>支持 ARM 版本</li><li>支持通过应用中心更新</li><li>上游网络接口支持横线(-)格式</li><li>更新 rtp2httpd 版本到 3.11.0</li><li>其他功能更新请查看：https://github.com/stackia/rtp2httpd/releases</li></ul>
