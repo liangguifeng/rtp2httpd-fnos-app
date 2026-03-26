@@ -3,4 +3,9 @@
 ### 在用户升级应用程序之前调用此脚本。
 echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 在用户升级应用程序之前调用此脚本" >> /var/log/rtp2http.log
 
+rm -f app/server/rtp2httpd
+mv app/server/rtp2httpd-3.11.0-x86_64 app/server/rtp2httpd
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 更新成功" >> "$LOG_FILE"
+
 exit 0
