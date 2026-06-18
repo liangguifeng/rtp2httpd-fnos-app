@@ -1,5 +1,5 @@
 appname               = rtp2httpd
-version               = 3.12.3
+version               = 3.13.5
 display_name          = rtp2httpd
 desc                  = <h2>rtp2httpd - IPTV 流媒体转发服务器</h2><p><strong>rtp2httpd</strong> 是一个多媒体流转发服务器，基于 <a href="https://github.com/oskar456/rtp2httpd" target="_blank">oskar456/rtp2httpd</a> 重写，专为中国大陆 IPTV 环境设计。</p><h3>✨ 核心功能</h3><ul><li><strong>多协议支持：</strong>组播 RTP/UDP 转单播 HTTP，RTSP 转 HTTP，支持 M3U/M3U8</li><li><strong>FCC 快速换台：</strong>毫秒级换台响应，媲美原生机顶盒体验</li><li><strong>实时状态监控：</strong>Web 状态页面显示客户端连接、带宽和传输量</li><li><strong>内置 Web 播放器：</strong>浏览器直接播放，支持时移回看</li><li><strong>高性能优化：</strong>非阻塞 IO、多核优化、缓冲池共享、零拷贝</li></ul><h3>📖 文档 & 资源</h3><ul><li><a href="https://github.com/liangguifeng/rtp2httpd-fnos-app" target="_blank">GitHub 仓库</a> - 安装指南、配置参数、M3U 使用说明</li><li><a href="https://www.right.com.cn/forum/thread-8461513-1-1.html" target="_blank">论坛教程</a> - IPTV 内网融合、组播转单播实例</li></ul>
 platform              = all
@@ -14,4 +14,4 @@ desktop_applaunchname = rtp2httpd.Application
 service_port          = 5140
 checkport             = true
 reloadui              = yes
-changelog             = <h3>更新日志</h3><ul><li>增加更新时的健壮性</li><li>更新 rtp2httpd 版本到 3.12.2</li><li>其他功能更新请查看：https://github.com/stackia/rtp2httpd/releases</li></ul>
+changelog             = <h3>更新日志</h3><ul><li>更新 rtp2httpd 版本到 3.13.5</li><li>其他功能更新请查看：https://github.com/stackia/rtp2httpd/releases</li></ul>
