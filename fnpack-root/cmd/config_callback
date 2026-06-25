@@ -123,13 +123,6 @@ fcc-listen-port-range = ${wizard_fcc_port_range:-40000-40100}
 # 增大此值以提高多客户端并发时的吞吐量，例如设置为 32768 或更高
 buffer-pool-max-size = ${wizard_buffer_pool_max_size:-16384}
 
-# 启用零拷贝发送以提升性能（默认: no）
-# 设为 true/on/1 以启用零拷贝
-# 需要内核支持 MSG_ZEROCOPY (Linux 4.14+)
-# 在支持的设备上可提升吞吐量并降低 CPU 占用，特别是在高并发负载下
-# 如果你的 rtp2httpd 位于反向代理之后 (nginx/caddy/lucky 等)，不建议开启这个选项
-zerocopy-on-send = ${wizard_zerocopy_on_send:-false}
-
 # 启用视频快照功能（默认: yes）
 # 启用后可通过 `snapshot=1` 查询参数获取视频流的实时快照
 video-snapshot = ${wizard_video_snapshot:-true}

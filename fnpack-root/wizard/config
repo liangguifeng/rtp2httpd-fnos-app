@@ -218,12 +218,6 @@
         ]
       },
       {
-        "type": "switch",
-        "field": "wizard_zerocopy_on_send",
-        "label": "启用零拷贝发送",
-        "initValue": "false"
-      },
-      {
         "type": "text",
         "field": "wizard_fcc_port_range",
         "label": "FCC UDP 监听端口范围",
