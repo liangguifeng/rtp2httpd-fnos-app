@@ -20,6 +20,7 @@ get_service_port() {
 }
 
 SERVICE_PORT="$(get_service_port)"
+CORS_ALLOW_ORIGIN="${wizard_cors_allow_origin-}"
 
 if [ -n "${SERVICE_PORT}" ] && [ "${SERVICE_PORT}" != "0" ] && ! [[ "${SERVICE_PORT}" =~ ^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4})$ ]]; then
     echo "服务监听端口必须为空、0 或 0-65535 之间的数字" > "${TRIM_TEMP_LOGFILE}"
@@ -38,14 +39,14 @@ rm -f "$CONF_FILE"
 # 重新生成配置
 cat > "$CONF_FILE" <<EOF
 [global]
-# 日志详细程度: 0=FATAL 1=ERROR 2=WARN 3=INFO 4=偶看
+# 日志详细程度: 0=FATAL 1=ERROR 2=WARN 3=INFO 4=DEBUG
 verbosity = ${wizard_verbosity:-3}
 
 # 最大并发客户端数
 maxclients = ${wizard_maxclients:-20}
 
 # UDPxy 兼容性
-udpxy = ${wizard_udpxy:-yes}
+udpxy = ${wizard_udpxy:-true}
 
 # 工作进程数（默认: 1）
 workers = ${wizard_workers:-1}
@@ -54,10 +55,10 @@ workers = ${wizard_workers:-1}
 # 检查 HTTP 请求的 Host 头 (默认：无)
 hostname = ${wizard_hostname:-}
 
-# 启用后，将使用 HTTP X-Forwarded-For 头作为客户端地址，用于显示在状态面板上 (默认：yes)
+# 启用后，将使用 HTTP X-Forwarded-For 头作为客户端地址，用于显示在状态面板上 (默认：no)
 # 并接受 X-Forwarded-Host / X-Forwarded-Proto 头作为 playlist.m3u 中的地址前缀
-# 建议仅在使用反向代理时启用
-xff = ${wizard_xff:-yes}
+# 飞牛统一网关以反向代理方式访问本应用，因此默认启用
+xff = ${wizard_xff:-true}
 
 # HTTP 请求认证令牌（可选，默认: 无）
 # 设置后，所有 HTTP 请求必须携带 r2h-token 查询参数，且值与此配置匹配
@@ -65,6 +66,10 @@ xff = ${wizard_xff:-yes}
 # http://server:5140/rtp/239.253.64.120:5140?fcc=10.255.14.152:15970&r2h-token=your-secret-token
 # http://server:5140/player?r2h-token=your-secret-token
 r2h-token = ${wizard_r2h_token:-}
+
+# CORS 跨域请求配置（默认: 空，关闭）
+# 留空关闭 CORS；设为 * 允许所有来源，或指定具体域名
+cors-allow-origin = ${CORS_ALLOW_ORIGIN}
 
 # 状态页路径（默认: /status）
 status-page-path = ${wizard_status_page_path:-/status}
@@ -75,6 +80,10 @@ player-page-path = ${wizard_player_page_path:-/player}
 # 统一网关公开访问前缀
 app-path-prefix = ${APP_PATH_PREFIX}
 
+# M3U 输出使用站点根相对路径（默认: true）
+# 开启后，playlist.m3u 和 HTTP 代理改写后的 M3U 中不会包含 http://host 前缀
+use-relative-path-in-m3u = ${wizard_use_relative_path_in_m3u:-true}
+
 # 上游网络接口配置 (可选)
 # 简单配置：只配置一个默认接口，所有流量类型都使用此接口
 # 高级配置：为不同流量类型配置专用接口
@@ -82,16 +91,17 @@ app-path-prefix = ${APP_PATH_PREFIX}
 # upstream-interface-multicast = eth0  # 组播流量 (RTP/UDP)
 # upstream-interface-fcc = eth1        # FCC
 # upstream-interface-rtsp = eth2       # RTSP
+# upstream-interface-http = eth3       # HTTP 代理
 #
 # 混合配置示例：默认使用 eth0，但 FCC 使用更快的 eth1
 # upstream-interface = eth0
 # upstream-interface-fcc = eth1
 #
-# 优先级：upstream-interface-{multicast,fcc,rtsp} > upstream-interface > 系统路由表
+# 优先级：upstream-interface-{multicast,fcc,rtsp,http} > upstream-interface > 系统路由表
 upstream-interface = ${wizard_upstream_interface:-enp2s0}
 
 # 外部 M3U 配置（支持 file://, http://, https://）
-# 注意：HTTP/HTTPS 需要安装 curl 命令
+# 注意：HTTP/HTTPS 需要安装 curl、uclient-fetch 或 wget 命令
 external-m3u = ${wizard_external_m3u:-file://${TRIM_PKGHOME}/player-list.m3u}
 
 # 外部 M3U 更新间隔（秒）
@@ -105,6 +115,7 @@ external-m3u-update-interval = ${wizard_external_m3u_update_interval:-7200}
 # - 配置不当的网络设备会丢弃组播成员关系
 # 推荐值: 30-120 秒（小于典型交换机超时 260 秒）
 # 注意：默认禁用（0），仅在遇到组播流中断时才需要启用
+# 注意：不支持 IPv6
 mcast-rejoin-interval = ${wizard_mcast_rejoin_interval:-0}
 
 # FCC 监听媒体流端口范围（可选，格式: 起始-结束，默认随机端口）
@@ -116,15 +127,15 @@ fcc-listen-port-range = ${wizard_fcc_port_range:-40000-40100}
 buffer-pool-max-size = ${wizard_buffer_pool_max_size:-16384}
 
 # 启用零拷贝发送以提升性能（默认: no）
-# 设为 yes/true/on/1 以启用零拷贝
+# 设为 true/on/1 以启用零拷贝
 # 需要内核支持 MSG_ZEROCOPY (Linux 4.14+)
 # 在支持的设备上可提升吞吐量并降低 CPU 占用，特别是在高并发负载下
 # 如果你的 rtp2httpd 位于反向代理之后 (nginx/caddy/lucky 等)，不建议开启这个选项
-zerocopy-on-send = ${wizard_zerocopy_on_send:-no}
+zerocopy-on-send = ${wizard_zerocopy_on_send:-false}
 
 # 启用视频快照功能（默认: yes）
 # 启用后可通过 `snapshot=1` 查询参数获取视频流的实时快照
-video-snapshot = ${wizard_video_snapshot:-yes}
+video-snapshot = ${wizard_video_snapshot:-true}
 
 # FFmpeg 可执行文件路径（默认: ffmpeg，使用系统 PATH）
 # 如果 ffmpeg 不在 PATH 中或想使用特定版本，请指定完整路径

@@ -37,6 +37,8 @@ rtp2httpd - IPTV 流媒体转发服务器，这是一个为飞牛OS（fnOS）平
 - `status-page-path`：状态页面路径
 - `player-page-path`：播放器页面路径
 - `app-path-prefix`：统一网关访问前缀
+- `use-relative-path-in-m3u`：M3U 输出是否使用相对路径，默认启用
+- `cors-allow-origin`：CORS 允许来源，默认留空（关闭）
 - `[bind]`：默认同时监听统一网关 Unix socket 和 5140 TCP 端口；端口留空或 0 时仅监听 Unix socket
 - `upstream-interface`：上游网络接口
 - `external-m3u`：外部M3U播放列表路径
