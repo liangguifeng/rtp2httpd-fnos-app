@@ -3,6 +3,7 @@
 LOG_FILE="${TRIM_PKGVAR}/info.log"
 PID_FILE="${TRIM_PKGVAR}/app.pid"
 CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
+SOCKET_FILE="${TRIM_APPDEST}/rtp2httpd.sock"
 
 # 写入程序启动命令
 case "${TRIM_SYS_ARCH}" in
@@ -48,28 +49,32 @@ stop_process() {
             # 程序不存在，删除 pid 文件
             rm -f "${PID_FILE}"
             log_msg "remove pid file 1"
-            return
-        fi
-
-        log_msg "send TERM signal to PID:${pid}..."
-        kill -TERM ${pid} >> ${LOG_FILE} 2>&1
-
-        # 等待程序退出
-        local count=0
-        while check_process "${pid}" && [ $count -lt 10 ]; do
-            sleep 1
-            count=$((count + 1))
-            log_msg "waiting process terminal... (${count}s/10s)"
-        done
-
-        if check_process "${pid}"; then
-            log_msg "send KILL signal to PID:${pid}..."
-            kill -KILL "${pid}"
-            sleep 1
-            rm -f "${PID_FILE}"
         else
-            log_msg "process killed... "
+            log_msg "send TERM signal to PID:${pid}..."
+            kill -TERM ${pid} >> ${LOG_FILE} 2>&1
+
+            # 等待程序退出
+            local count=0
+            while check_process "${pid}" && [ $count -lt 10 ]; do
+                sleep 1
+                count=$((count + 1))
+                log_msg "waiting process terminal... (${count}s/10s)"
+            done
+
+            if check_process "${pid}"; then
+                log_msg "send KILL signal to PID:${pid}..."
+                kill -KILL "${pid}"
+                sleep 1
+                rm -f "${PID_FILE}"
+            else
+                log_msg "process killed... "
+            fi
         fi
+    fi
+
+    if [ -S "${SOCKET_FILE}" ]; then
+        rm -f "${SOCKET_FILE}"
+        log_msg "remove socket file ${SOCKET_FILE}"
     fi
 
     return 0

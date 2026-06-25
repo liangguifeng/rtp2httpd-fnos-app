@@ -1,3 +1,25 @@
 .idea/
-.git/
+.fnpack/
 *.fpk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux / editors
+*~
+*.swp
+*.swo
+*.tmp
+.nfs*

@@ -3,19 +3,19 @@
         "rtp2httpd.Application": {
             "title": "rtp2httpd 面板",
             "icon": "images/icon_{0}.png",
-            "type": "url",
+            "type": "iframe",
             "protocol": "",
-            "port": "${wizard_port}",
-            "url": "/status",
+            "gatewaySocket": "rtp2httpd.sock",
+            "gatewayPrefix": "/app/rtp2httpd",
+            "url": "/app/rtp2httpd/status",
             "allUsers": true
         },
         "rtp2httpd.Player": {
             "title": "rtp2httpd 播放器",
             "icon": "images/icon_{0}.png",
-            "type": "url",
+            "type": "iframe",
             "protocol": "",
-            "port": "${wizard_port}",
-            "url": "/player",
+            "url": "/app/rtp2httpd/player",
             "allUsers": true
         }
     }

@@ -12,7 +12,7 @@ rtp2httpd - IPTV 流媒体转发服务器，这是一个为飞牛OS（fnOS）平
 
 ## 📋 系统要求
 
-- 飞牛OS（fnOS）0.9.0或更高版本
+- 飞牛OS（fnOS）1.1.3100或更高版本
 - 架构：x86_64
 - 管理员权限（root）
 
@@ -21,7 +21,7 @@ rtp2httpd - IPTV 流媒体转发服务器，这是一个为飞牛OS（fnOS）平
 1. 将本项目打包为飞牛OS应用程序格式
 2. 通过飞牛OS应用中心安装
 3. 安装过程中需要配置以下参数：
-   - 端口（默认：5140）
+   - 服务监听端口（默认：5140；留空或 0 时只通过统一网关访问）
    - 上游接口（默认：enp2s0）
    - 是否启用udpxy（默认：yes）
    - 最大客户端数（默认：20）
@@ -36,6 +36,10 @@ rtp2httpd - IPTV 流媒体转发服务器，这是一个为飞牛OS（fnOS）平
 - `workers`：工作线程数量
 - `status-page-path`：状态页面路径
 - `player-page-path`：播放器页面路径
+- `app-path-prefix`：统一网关访问前缀
+- `use-relative-path-in-m3u`：M3U 输出是否使用相对路径，默认启用
+- `cors-allow-origin`：CORS 允许来源，默认留空（关闭）
+- `[bind]`：默认同时监听统一网关 Unix socket 和 5140 TCP 端口；端口留空或 0 时仅监听 Unix socket
 - `upstream-interface`：上游网络接口
 - `external-m3u`：外部M3U播放列表路径
 - `fcc-listen-port-range`：FCC监听端口范围
@@ -45,13 +49,14 @@ rtp2httpd - IPTV 流媒体转发服务器，这是一个为飞牛OS（fnOS）平
 
 1. 安装完成后，服务会自动启动
 2. 访问Web管理界面：
-   - 状态页面：`http://<your-server-ip>:<port>/status`
-   - 播放器页面：`http://<your-server-ip>:<port>/player`
+   - 状态页面：`http://<your-server-ip>:5666/app/rtp2httpd/status`
+   - 播放器页面：`http://<your-server-ip>:5666/app/rtp2httpd/player`
 3. 通过飞牛OS应用中心可以管理服务的启停
 
 ## 🌐 网络接口
 
-- 默认服务端口：5140
+- 应用入口：通过飞牛统一网关 `/app/rtp2httpd` 访问
+- 可选 TCP 端口：默认 5140，配置为空或 0 时关闭
 - FCC端口范围：40000-40100
 - 支持HTTP协议进行流媒体转发
 
