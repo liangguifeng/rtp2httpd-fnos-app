@@ -3,7 +3,7 @@
         "rtp2httpd.Application": {
             "title": "rtp2httpd 面板",
             "icon": "images/icon_{0}.png",
-            "type": "url",
+            "type": "iframe",
             "protocol": "",
             "gatewaySocket": "rtp2httpd.sock",
             "gatewayPrefix": "/app/rtp2httpd",
@@ -13,7 +13,7 @@
         "rtp2httpd.Player": {
             "title": "rtp2httpd 播放器",
             "icon": "images/icon_{0}.png",
-            "type": "url",
+            "type": "iframe",
             "protocol": "",
             "url": "/app/rtp2httpd/player",
             "allUsers": true
