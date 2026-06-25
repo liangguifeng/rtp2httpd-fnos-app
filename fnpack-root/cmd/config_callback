@@ -1,15 +1,33 @@
 #!/bin/bash
 
-### 在用户安装应用程序之前调用此脚本。
-# 确保路径存在(因为卸载时删除了该目录，重新安装该目录不会自动创建)
+### 用户在应用程序设置页面中更改环境变量后调用此脚本。
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 用户在应用程序设置页面中更改环境变量后调用此脚本" >> /var/log/rtp2http.log
+
 LOG_FILE=/var/log/rtp2http.log
 CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
+APP_PATH_PREFIX="/app/rtp2httpd"
+GATEWAY_SOCKET="${TRIM_APPDEST}/rtp2httpd.sock"
 
-mkdir -p "$TRIM_PKGETC"
-mkdir -p "$TRIM_PKGHOME"
+get_service_port() {
+    local value
 
-# 初始化配置文件
-echo "$(date '+%Y-%m-%d %H:%M:%S') - [install_init] 生成配置文件: $CONF_FILE" >> "$LOG_FILE"
+    if [ "${wizard_port+x}" = "x" ]; then
+        value="${wizard_port}"
+    else
+        value="5140"
+    fi
+
+    printf "%s" "${value}" | tr -d '[:space:]'
+}
+
+SERVICE_PORT="$(get_service_port)"
+
+if [ -n "${SERVICE_PORT}" ] && [ "${SERVICE_PORT}" != "0" ] && ! [[ "${SERVICE_PORT}" =~ ^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4})$ ]]; then
+    echo "服务监听端口必须为空、0 或 0-65535 之间的数字" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+fi
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 重新生成配置文件: $CONF_FILE" >> "$LOG_FILE"
 
 # 删除旧配置
 rm -f "$CONF_FILE"
@@ -50,6 +68,9 @@ status-page-path = ${wizard_status_page_path:-/status}
 
 # 播放器页路径（默认: /player）
 player-page-path = ${wizard_player_page_path:-/player}
+
+# 统一网关公开访问前缀
+app-path-prefix = ${APP_PATH_PREFIX}
 
 # 上游网络接口配置 (可选)
 # 简单配置：只配置一个默认接口，所有流量类型都使用此接口
@@ -115,14 +136,18 @@ EOF
 
 cat >> "$CONF_FILE" <<EOF
 [bind]
-# 监听所有地址的 5140 端口
-* ${wizard_port:-5140}
+# 监听统一网关转发的 Unix domain socket
+${GATEWAY_SOCKET}
 EOF
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') - [install_init] 配置生成成功" >> "$LOG_FILE"
+if [ -n "${SERVICE_PORT}" ] && [ "${SERVICE_PORT}" != "0" ]; then
+cat >> "$CONF_FILE" <<EOF
 
-# 初始化本地直播流m3u文件
-echo "$(date '+%Y-%m-%d %H:%M:%S') - [install_init] Init local m3u file: ${TRIM_PKGHOME}/player-list.m3u" >> "$LOG_FILE"
-cp "${TRIM_PKGINST_TEMP_DIR}/server/player-list.m3u" ${TRIM_PKGHOME}
+# 可选 TCP 监听端口
+* ${SERVICE_PORT}
+EOF
+fi
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_callback] 配置生成成功" >> "$LOG_FILE"
 
 exit 0
