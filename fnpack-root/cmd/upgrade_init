@@ -5,8 +5,8 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 在用户升级应用程序�
 
 rm -f app/server/rtp2httpd-x86_64
 rm -f app/server/rtp2httpd-aarch64
-mv app/server/upgrade/rtp2httpd-3.14.0-x86_64 app/server/rtp2httpd-x86_64
-mv app/server/upgrade/rtp2httpd-3.14.0-aarch64 app/server/rtp2httpd-aarch64
+mv app/server/upgrade/rtp2httpd-3.14.1-x86_64 app/server/rtp2httpd-x86_64
+mv app/server/upgrade/rtp2httpd-3.14.1-aarch64 app/server/rtp2httpd-aarch64
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 更新成功" >> "$LOG_FILE"
 

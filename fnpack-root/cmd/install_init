@@ -20,7 +20,7 @@ get_service_port() {
 }
 
 SERVICE_PORT="$(get_service_port)"
-CORS_ALLOW_ORIGIN="${wizard_cors_allow_origin-}"
+CORS_ALLOW_ORIGIN="${wizard_cors_allow_origin:-*}"
 
 if [ -n "${SERVICE_PORT}" ] && [ "${SERVICE_PORT}" != "0" ] && ! [[ "${SERVICE_PORT}" =~ ^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4})$ ]]; then
     echo "服务监听端口必须为空、0 或 0-65535 之间的数字" > "${TRIM_TEMP_LOGFILE}"
@@ -80,9 +80,9 @@ player-page-path = ${wizard_player_page_path:-/player}
 # 统一网关公开访问前缀
 app-path-prefix = ${APP_PATH_PREFIX}
 
-# M3U 输出使用站点根相对路径（默认: true）
+# M3U 输出使用站点根相对路径（默认: false）
 # 开启后，playlist.m3u 和 HTTP 代理改写后的 M3U 中不会包含 http://host 前缀
-use-relative-path-in-m3u = ${wizard_use_relative_path_in_m3u:-true}
+use-relative-path-in-m3u = ${wizard_use_relative_path_in_m3u:-false}
 
 # 上游网络接口配置 (可选)
 # 简单配置：只配置一个默认接口，所有流量类型都使用此接口

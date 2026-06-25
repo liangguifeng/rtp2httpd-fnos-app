@@ -91,11 +91,7 @@
         "type": "switch",
         "field": "wizard_use_relative_path_in_m3u",
         "label": "M3U 输出使用相对路径",
-        "initValue": "true"
-      },
-      {
-        "type": "tips",
-        "helpText": "如需通过飞牛统一网关访问，则必须开启。"
+        "initValue": "false"
       },
       {
         "type": "switch",
@@ -130,7 +126,7 @@
         "type": "text",
         "field": "wizard_cors_allow_origin",
         "label": "CORS 允许来源",
-        "initValue": ""
+        "initValue": "*"
       },
       {
         "type": "text",
