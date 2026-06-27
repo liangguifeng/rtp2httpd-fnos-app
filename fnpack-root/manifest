@@ -13,4 +13,4 @@ desktop_uidir         = ui
 desktop_applaunchname = rtp2httpd.Application
 checkport             = false
 reloadui              = yes
-changelog             = <h3>更新日志</h3><ul><li>接入飞牛统一网关和登录认证</li><li>更新 rtp2httpd 版本到 3.13.5</li><li>其他功能更新请查看：https://github.com/stackia/rtp2httpd/releases</li></ul>
+changelog             = <h3>更新日志</h3><ul><li><strong>重要提醒：由于适配统一网关需要，所有 URL 需要带上前缀 <code>/app/rtp2httpd</code>。</strong>状态面板：<code>http://&lt;ip&gt;:&lt;端口&gt;/app/rtp2httpd/status</code>；播放器：<code>http://&lt;ip&gt;:&lt;端口&gt;/app/rtp2httpd/player</code>；playlist.m3u：<code>http://&lt;ip&gt;:&lt;端口&gt;/app/rtp2httpd/playlist.m3u</code>。如果还在使用旧版本无前缀 URL，请注意同步调整。</li><li>接入飞牛统一网关和登录认证</li><li>更新 rtp2httpd 版本到 3.14.1</li><li>其他功能更新请查看：https://github.com/stackia/rtp2httpd/releases</li></ul>
