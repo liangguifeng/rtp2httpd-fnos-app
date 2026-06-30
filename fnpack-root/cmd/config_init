@@ -1,6 +1,8 @@
 #!/bin/bash
 
 ### 该脚本在用户在应用程序设置页面中更改环境变量之前调用。
-echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_init] 该脚本在用户在应用程序设置页面中更改环境变量之前调用" >> /var/log/rtp2http.log
+LOG_FILE="${TRIM_PKGVAR}/script.log"
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') - [config_init] 该脚本在用户在应用程序设置页面中更改环境变量之前调用" >> "$LOG_FILE"
 
 exit 0

@@ -1,38 +1,65 @@
 #!/bin/bash
 
-LOG_FILE="${TRIM_PKGVAR}/info.log"
+LOG_FILE="${TRIM_PKGVAR}/script.log"
+PROCESS_LOG_FILE="${TRIM_PKGVAR}/info.log"
 PID_FILE="${TRIM_PKGVAR}/app.pid"
 CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
 SOCKET_FILE="${TRIM_APPDEST}/rtp2httpd.sock"
+CMD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_FILE="${CMD_DIR}/rtp2httpd_lib"
+
+if [ ! -r "${LIB_FILE}" ]; then
+    echo "内部脚本库缺失: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+fi
+
+. "${LIB_FILE}" || {
+    echo "内部脚本库加载失败: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
 
 # 写入程序启动命令
 case "${TRIM_SYS_ARCH}" in
   arm)
-    CMD="${TRIM_APPDEST}/server/rtp2httpd-aarch64 --config ${CONF_FILE}"
+    BINARY="${TRIM_APPDEST}/server/rtp2httpd-aarch64"
     ;;
   x86)
-    CMD="${TRIM_APPDEST}/server/rtp2httpd-x86_64 --config ${CONF_FILE}"
+    BINARY="${TRIM_APPDEST}/server/rtp2httpd-x86_64"
     ;;
   *)
-    echo "暂不支持当前结构：${TRIM_SYS_ARCH}" > "${TRIM_TEMP_LOGFILE}"
-    exit 1
+    fail_with_message "暂不支持当前架构：${TRIM_SYS_ARCH}"
     ;;
 esac
-
-log_msg() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> ${LOG_FILE}
-}
 
 start_process() {
     if status; then
         return 0
     fi
 
+    if [ ! -x "${BINARY}" ]; then
+        fail_with_message "rtp2httpd 可执行文件不存在或不可执行: ${BINARY}"
+    fi
+
+    if [ ! -r "${CONF_FILE}" ]; then
+        fail_with_message "rtp2httpd 配置文件不存在或不可读: ${CONF_FILE}"
+    fi
+
+    run_or_fail "创建运行状态目录失败: ${TRIM_PKGVAR}" mkdir -p "${TRIM_PKGVAR}"
+
     log_msg "Starting process ..."
-    # 运行程序
-    bash -c "${CMD}" >> ${LOG_FILE} 2>&1 &
-    # 写入 pid 到文件
-    printf "%s" "$!" > ${PID_FILE}
+    "${BINARY}" --config "${CONF_FILE}" >> "${PROCESS_LOG_FILE}" 2>&1 &
+    local pid="$!"
+
+    if ! printf "%s" "${pid}" > "${PID_FILE}"; then
+        kill "${pid}" 2>/dev/null || true
+        fail_with_message "写入 PID 文件失败: ${PID_FILE}"
+    fi
+
+    sleep 1
+    if ! check_process "${pid}"; then
+        rm -f "${PID_FILE}"
+        fail_with_message "rtp2httpd 启动后立即退出，请查看日志: ${PROCESS_LOG_FILE}"
+    fi
 
     return 0
 }
@@ -51,7 +78,9 @@ stop_process() {
             log_msg "remove pid file 1"
         else
             log_msg "send TERM signal to PID:${pid}..."
-            kill -TERM ${pid} >> ${LOG_FILE} 2>&1
+            if ! kill -TERM "${pid}" >> "${LOG_FILE}" 2>&1; then
+                fail_with_message "停止 rtp2httpd 失败，无法发送 TERM 信号到 PID ${pid}"
+            fi
 
             # 等待程序退出
             local count=0
@@ -63,7 +92,9 @@ stop_process() {
 
             if check_process "${pid}"; then
                 log_msg "send KILL signal to PID:${pid}..."
-                kill -KILL "${pid}"
+                if ! kill -KILL "${pid}" >> "${LOG_FILE}" 2>&1; then
+                    fail_with_message "停止 rtp2httpd 失败，无法发送 KILL 信号到 PID ${pid}"
+                fi
                 sleep 1
                 rm -f "${PID_FILE}"
             else
@@ -73,7 +104,7 @@ stop_process() {
     fi
 
     if [ -S "${SOCKET_FILE}" ]; then
-        rm -f "${SOCKET_FILE}"
+        run_or_fail "删除旧 Unix socket 文件失败: ${SOCKET_FILE}" rm -f "${SOCKET_FILE}"
         log_msg "remove socket file ${SOCKET_FILE}"
     fi
 
@@ -121,6 +152,6 @@ status)
     fi
     ;;
 *)
-    exit 1
+    fail_with_message "未知服务命令: ${1:-}"
     ;;
 esac

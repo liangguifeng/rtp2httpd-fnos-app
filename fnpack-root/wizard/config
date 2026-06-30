@@ -142,7 +142,59 @@
       }
     ]
   },
-
+  {
+    "stepTitle": "上游接口（高级）",
+    "items": [
+      {
+        "type": "text",
+        "field": "wizard_upstream_interface_multicast",
+        "label": "组播流量上游接口",
+        "initValue": "",
+        "rules": [
+          {
+            "pattern": "^$|^[a-zA-Z0-9_\\-.:]+$",
+            "message": "上游网络接口只能留空，或包含字母、数字、下划线、短横线、点号和冒号"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "field": "wizard_upstream_interface_fcc",
+        "label": "FCC 上游接口",
+        "initValue": "",
+        "rules": [
+          {
+            "pattern": "^$|^[a-zA-Z0-9_\\-.:]+$",
+            "message": "上游网络接口只能留空，或包含字母、数字、下划线、短横线、点号和冒号"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "field": "wizard_upstream_interface_rtsp",
+        "label": "RTSP 上游接口",
+        "initValue": "",
+        "rules": [
+          {
+            "pattern": "^$|^[a-zA-Z0-9_\\-.:]+$",
+            "message": "上游网络接口只能留空，或包含字母、数字、下划线、短横线、点号和冒号"
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "field": "wizard_upstream_interface_http",
+        "label": "HTTP 代理上游接口",
+        "initValue": "",
+        "rules": [
+          {
+            "pattern": "^$|^[a-zA-Z0-9_\\-.:]+$",
+            "message": "上游网络接口只能留空，或包含字母、数字、下划线、短横线、点号和冒号"
+          }
+        ]
+      }
+    ]
+  },
   {
     "stepTitle": "视频快照与 FFmpeg（高级）",
     "items": [
@@ -224,6 +276,57 @@
         "field": "wizard_mcast_rejoin_interval",
         "label": "组播周期性重新加入间隔（秒）",
         "initValue": "0"
+      },
+      {
+        "type": "text",
+        "field": "wizard_udp_rcvbuf_size",
+        "label": "UDP 接收缓冲区大小（字节）",
+        "initValue": "524288",
+        "rules": [
+          {
+            "pattern": "^[0-9]+$",
+            "message": "必须为数字"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stepTitle": "日志与上游兼容（高级）",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "以下配置用于访问审计、上游 HTTP/RTSP 兼容和 RTSP UDP NAT 穿透；一般场景可保持默认。"
+      },
+      {
+        "type": "text",
+        "field": "wizard_access_log",
+        "label": "访问日志文件路径",
+        "initValue": ""
+      },
+      {
+        "type": "text",
+        "field": "wizard_log_format",
+        "label": "访问日志格式",
+        "initValue": "$client_addr [$time_iso8601] \"$service_url\" $service_type \"$upstream_url\""
+      },
+      {
+        "type": "text",
+        "field": "wizard_http_proxy_user_agent",
+        "label": "HTTP 上游 User-Agent",
+        "initValue": ""
+      },
+      {
+        "type": "text",
+        "field": "wizard_rtsp_user_agent",
+        "label": "RTSP 上游 User-Agent",
+        "initValue": ""
+      },
+      {
+        "type": "text",
+        "field": "wizard_rtsp_stun_server",
+        "label": "RTSP STUN 服务器",
+        "initValue": ""
       }
     ]
   }

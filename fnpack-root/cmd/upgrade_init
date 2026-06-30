@@ -1,13 +1,27 @@
 #!/bin/bash
 
 ### 在用户升级应用程序之前调用此脚本。
-echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 在用户升级应用程序之前调用此脚本" >> /var/log/rtp2http.log
+LOG_FILE="${TRIM_PKGVAR}/script.log"
+CMD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_FILE="${CMD_DIR}/rtp2httpd_lib"
+
+if [ ! -r "${LIB_FILE}" ]; then
+    echo "内部脚本库缺失: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+fi
+
+. "${LIB_FILE}" || {
+    echo "内部脚本库加载失败: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
+
+log_msg "[upgrade_init] 在用户升级应用程序之前调用此脚本"
 
 rm -f app/server/rtp2httpd-x86_64
 rm -f app/server/rtp2httpd-aarch64
 mv app/server/upgrade/rtp2httpd-3.14.2-x86_64 app/server/rtp2httpd-x86_64
 mv app/server/upgrade/rtp2httpd-3.14.2-aarch64 app/server/rtp2httpd-aarch64
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') - [upgrade_init] 更新成功" >> "$LOG_FILE"
+log_msg "[upgrade_init] 更新成功"
 
 exit 0
