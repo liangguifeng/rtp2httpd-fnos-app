@@ -92,6 +92,68 @@ validate_config_values() {
     return 0
 }
 
+read_global_config_value() {
+    local config_file="$1"
+    local key="$2"
+
+    awk -v key="${key}" '
+        /^[[:space:]]*\[/ {
+            in_global = ($0 ~ /^[[:space:]]*\[global\][[:space:]]*([#;].*)?$/)
+            next
+        }
+        in_global {
+            line = $0
+            sub(/^[[:space:]]+/, "", line)
+            if (line == "" || line ~ /^[#;]/) {
+                next
+            }
+
+            pos = index(line, "=")
+            if (pos == 0) {
+                next
+            }
+
+            name = substr(line, 1, pos - 1)
+            value = substr(line, pos + 1)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+
+            if (name == key) {
+                sub(/^[[:space:]]+/, "", value)
+                sub(/[[:space:]]+$/, "", value)
+                result = value
+            }
+        }
+        END {
+            if (result != "") {
+                print result
+            }
+        }
+    ' "${config_file}"
+}
+
+validate_external_m3u_file_access() {
+    local config_file="$1"
+    local external_m3u
+    local file_path
+
+    external_m3u="$(read_global_config_value "${config_file}" "external-m3u")"
+
+    case "${external_m3u}" in
+    ""|http://*|https://*)
+        return 0
+        ;;
+    file://*)
+        file_path="${external_m3u#file://}"
+        if [ -z "${file_path}" ] || [ ! -r "${file_path}" ]; then
+            return_with_message "外部 M3U 文件无法访问: ${file_path:-${external_m3u}}。请确认文件是否存在，并在【应用设置】中授权目录读取权限"
+            return $?
+        fi
+        ;;
+    esac
+
+    return 0
+}
+
 generate_rtp2httpd_config() {
     local log_tag="$1"
     local cors_default="$2"

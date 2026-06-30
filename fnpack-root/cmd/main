@@ -44,6 +44,8 @@ start_process() {
         fail_with_message "rtp2httpd 配置文件不存在或不可读: ${CONF_FILE}"
     fi
 
+    validate_external_m3u_file_access "${CONF_FILE}" || return $?
+
     run_or_fail "创建运行状态目录失败: ${TRIM_PKGVAR}" mkdir -p "${TRIM_PKGVAR}"
 
     log_msg "Starting process ..."
