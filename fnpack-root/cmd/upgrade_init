@@ -19,8 +19,8 @@ log_msg "[upgrade_init] 在用户升级应用程序之前调用此脚本"
 
 rm -f app/server/rtp2httpd-x86_64
 rm -f app/server/rtp2httpd-aarch64
-mv app/server/upgrade/rtp2httpd-3.14.3-x86_64 app/server/rtp2httpd-x86_64
-mv app/server/upgrade/rtp2httpd-3.14.3-aarch64 app/server/rtp2httpd-aarch64
+mv app/server/upgrade/rtp2httpd-3.15.0-x86_64 app/server/rtp2httpd-x86_64
+mv app/server/upgrade/rtp2httpd-3.15.0-aarch64 app/server/rtp2httpd-aarch64
 
 log_msg "[upgrade_init] 更新成功"
 
