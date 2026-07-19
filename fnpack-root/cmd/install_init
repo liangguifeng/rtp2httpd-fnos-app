@@ -19,8 +19,8 @@ fi
     exit 1
 }
 
-run_or_fail "创建配置目录失败: ${TRIM_PKGETC}" mkdir -p "$TRIM_PKGETC"
-run_or_fail "创建数据目录失败: ${TRIM_PKGHOME}" mkdir -p "$TRIM_PKGHOME"
+#run_or_fail "创建配置目录失败: ${TRIM_PKGETC}" mkdir -p "$TRIM_PKGETC"
+#run_or_fail "创建数据目录失败: ${TRIM_PKGHOME}" mkdir -p "$TRIM_PKGHOME"
 
 generate_rtp2httpd_config "install_init" "*" "生成" || exit $?
 

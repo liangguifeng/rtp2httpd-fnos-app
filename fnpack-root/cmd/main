@@ -46,7 +46,7 @@ start_process() {
 
     validate_external_m3u_file_access "${CONF_FILE}" || return $?
 
-    run_or_fail "创建运行状态目录失败: ${TRIM_PKGVAR}" mkdir -p "${TRIM_PKGVAR}"
+#    run_or_fail "创建运行状态目录失败: ${TRIM_PKGVAR}" mkdir -p "${TRIM_PKGVAR}"
 
     log_msg "Starting process ..."
     "${BINARY}" --config "${CONF_FILE}" >> "${PROCESS_LOG_FILE}" 2>&1 &
