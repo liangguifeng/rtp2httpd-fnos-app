@@ -2,7 +2,28 @@
 
 ### 用户安装应用程序后调用此脚本。
 LOG_FILE="${TRIM_PKGVAR}/script.log"
+CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
+APP_PATH_PREFIX="/app/rtp2httpd"
+GATEWAY_SOCKET="${TRIM_APPDEST}/rtp2httpd.sock"
+CMD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_FILE="${CMD_DIR}/rtp2httpd_lib"
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') - [install_callback] 用户安装应用程序后调用此脚本" >> "$LOG_FILE"
+
+if [ ! -r "${LIB_FILE}" ]; then
+    echo "内部脚本库缺失: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+fi
+
+. "${LIB_FILE}" || {
+    echo "内部脚本库加载失败: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
+
+generate_rtp2httpd_config "install_init" "*" "生成" || exit $?
+
+# 初始化本地直播流m3u文件
+log_msg "[install_init] Init local m3u file: ${TRIM_PKGHOME}/player-list.m3u"
+run_or_fail "初始化本地直播源文件失败" cp "${TRIM_PKGINST_TEMP_DIR}/server/player-list.m3u" "${TRIM_PKGHOME}/"
 
 exit 0
