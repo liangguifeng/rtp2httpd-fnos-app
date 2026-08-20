@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FNPACK_VERSION="${FNPACK_VERSION:-1.2.1}"
+FNPACK_VERSION="${FNPACK_VERSION:-1.2.3}"
 FNPACK_BASE_URL="${FNPACK_BASE_URL:-https://static2.fnnas.com/fnpack}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
