@@ -1,25 +1,9 @@
 #!/bin/bash
 
-### 用户在应用程序设置页面中更改环境变量后调用此脚本。
+### 安装后不提供运行参数设置；保留空回调以兼容旧版本残留入口。
 LOG_FILE="${TRIM_PKGVAR}/script.log"
-CONF_FILE="${TRIM_PKGETC}/rtp2httpd.conf"
-APP_PATH_PREFIX="/app/rtp2httpd"
-GATEWAY_SOCKET="${TRIM_APPDEST}/rtp2httpd.sock"
-CMD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIB_FILE="${CMD_DIR}/rtp2httpd_lib"
 
-if [ ! -r "${LIB_FILE}" ]; then
-    echo "内部脚本库缺失: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
-    exit 1
-fi
-
-. "${LIB_FILE}" || {
-    echo "内部脚本库加载失败: ${LIB_FILE}" > "${TRIM_TEMP_LOGFILE}"
-    exit 1
-}
-
-log_msg "[config_callback] 用户在应用程序设置页面中更改环境变量后调用此脚本"
-
-generate_rtp2httpd_config "config_callback" "" "重新生成" || exit $?
+printf '%s - [config_callback] 已禁用安装后运行参数设置，保留现有配置文件不变\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" >> "${LOG_FILE}" 2>/dev/null || true
 
 exit 0

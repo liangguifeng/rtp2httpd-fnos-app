@@ -20,7 +20,11 @@ fi
     exit 1
 }
 
-generate_rtp2httpd_config "install_init" "*" "生成" || exit $?
+if [ -e "${CONF_FILE}" ] || [ -L "${CONF_FILE}" ]; then
+    log_msg "[install_callback] 检测到已有配置文件，跳过生成: ${CONF_FILE}"
+else
+    generate_rtp2httpd_config "install_callback" "*" "生成" || exit $?
+fi
 
 # 初始化本地直播流m3u文件
 log_msg "[install_init] Init local m3u file: ${TRIM_PKGHOME}/player-list.m3u"

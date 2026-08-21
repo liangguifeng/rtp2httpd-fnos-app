@@ -18,18 +18,26 @@ rtp2httpd - IPTV 流媒体转发服务器，这是一个为飞牛 fnOS 平台开
 1. 通过 fnOS 应用中心搜索 `rtp2httpd` 安装
 2. 安装过程中需要配置以下参数：
    - 默认上游接口（默认：enp2s0）
-   - 服务监听端口（默认：5140；留空或 0 时只通过统一网关访问）
+   - 服务监听端口（默认：5140；填写 0 时只通过统一网关访问）
 
 ## ⚙️ 配置说明
 
-应用程序的主要配置文件位于 `${TRIM_PKGETC}/rtp2httpd.conf`。具体参数请参考 [配置文件格式](https://rtp2httpd.com/reference/configuration#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F)。
+安装时仅允许设置默认上游网卡和服务监听端口。安装完成后，请按以下步骤修改配置文件：
+
+1. 打开【应用中心】→【已安装】→【rtp2httpd】→【应用设置】，查看应用的安装位置和图文教程。
+2. 打开【文件管理】，在左侧菜单进入【管理员视角】，选择应用所在的存储位置。
+3. 依次打开 `@appconf` → `rtp2httpd`，双击 `rtp2httpd.conf` 进行修改。
+4. 如果配置文件无法直接打开，请在应用中心安装飞牛官方【文本编辑器】，或将文件下载到本地，修改后再上传回原位置。
+5. 保存配置后，返回应用中心，先停止再启动 rtp2httpd，使新配置生效。
+
+配置文件仅在不存在时自动生成，并为每个配置项提供中文注释。应用更新或保留数据后重新安装时，已有配置文件不会被覆盖。具体参数请参考 [配置文件格式](https://rtp2httpd.com/reference/configuration#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F)。`app-path-prefix` 和统一网关 Unix socket 由 fnOS 集成固定管理。
 
 ## 🔧 使用方法
 
 1. 安装完成后，服务会自动启动
 2. 访问 Web 管理界面：
    - 状态页面：`http://<your-server-ip>:5140/app/rtp2httpd/status`
-   - 播放器页面：`http://<your-server-ip>:51也可以从你的飞牛桌面直接访问40/app/rtp2httpd/player`
+   - 播放器页面：`http://<your-server-ip>:5140/app/rtp2httpd/player`
    - 也可以点击飞牛桌面上的 `rtp2httpd 面板` / `rtp2httpd 播放器` 直接在桌面内访问
 3. 通过应用中心可以管理服务的启停
 

@@ -49,26 +49,64 @@ run_or_fail() {
 }
 
 get_service_port() {
-    local value
+    printf "%s" "${wizard_port:-5140}" | tr -d '[:space:]'
+}
 
-    if [ "${wizard_port+x}" = "x" ]; then
-        value="${wizard_port}"
-    else
-        value="5140"
+set_default_if_empty() {
+    local variable_name="$1"
+    local default_value="$2"
+
+    if [ -z "${!variable_name:-}" ]; then
+        printf -v "${variable_name}" '%s' "${default_value}"
     fi
+}
 
-    printf "%s" "${value}" | tr -d '[:space:]'
+is_uint32_decimal() {
+    local value="$1"
+
+    [[ "${value}" =~ ^[0-9]{1,10}$ ]] && [ "${value}" -le 4294967295 ]
+}
+
+is_positive_uint32_decimal() {
+    local value="$1"
+
+    [[ "${value}" =~ ^[1-9][0-9]{0,9}$ ]] && [ "${value}" -le 4294967295 ]
 }
 
 init_config_values() {
     local cors_default="$1"
 
+    set_default_if_empty wizard_verbosity "3"
+    set_default_if_empty wizard_maxclients "20"
+    set_default_if_empty wizard_udpxy "true"
+    set_default_if_empty wizard_workers "1"
+    set_default_if_empty wizard_xff "true"
+    set_default_if_empty wizard_status_page_path "/status"
+    set_default_if_empty wizard_player_page_path "/player"
+    set_default_if_empty wizard_use_relative_path_in_m3u "false"
+    set_default_if_empty wizard_upstream_interface "enp2s0"
+    set_default_if_empty wizard_external_m3u_mode "custom"
+    if [ "${wizard_external_m3u_mode}" = "default" ]; then
+        wizard_external_m3u=""
+    fi
+    set_default_if_empty wizard_external_m3u "file://${TRIM_PKGHOME}/player-list.m3u"
+    set_default_if_empty wizard_external_m3u_update_interval "7200"
+    set_default_if_empty wizard_mcast_rejoin_interval "0"
+    set_default_if_empty wizard_fcc_port_range "40000-40100"
+    set_default_if_empty wizard_buffer_pool_max_size "16384"
+    set_default_if_empty wizard_udp_rcvbuf_size "524288"
+    set_default_if_empty wizard_log_format '$client_addr [$time_iso8601] "$service_url" $service_type "$upstream_url"'
+    set_default_if_empty wizard_zerocopy_on_send "false"
+    set_default_if_empty wizard_video_snapshot "true"
+    set_default_if_empty wizard_ffmpeg_path "/usr/bin/ffmpeg"
+    set_default_if_empty wizard_ffmpeg_args "-hwaccel none"
+
     SERVICE_PORT="$(get_service_port)"
     CORS_ALLOW_ORIGIN="${wizard_cors_allow_origin:-${cors_default}}"
-    DEFAULT_LOG_FORMAT='$client_addr [$time_iso8601] "$service_url" $service_type "$upstream_url"'
-    UDP_RCVBUF_SIZE="${wizard_udp_rcvbuf_size:-524288}"
+    UDP_RCVBUF_SIZE="${wizard_udp_rcvbuf_size}"
     ACCESS_LOG="${wizard_access_log:-}"
-    LOG_FORMAT="${wizard_log_format:-${DEFAULT_LOG_FORMAT}}"
+    LOG_FORMAT="${wizard_log_format}"
+    PID_FILE_CONFIG="${wizard_pid_file:-}"
     HTTP_PROXY_USER_AGENT="${wizard_http_proxy_user_agent:-}"
     RTSP_USER_AGENT="${wizard_rtsp_user_agent:-}"
     RTSP_STUN_SERVER="${wizard_rtsp_stun_server:-}"
@@ -79,15 +117,99 @@ init_config_values() {
 }
 
 validate_config_values() {
+    local variable_name
+    local value
+    local fcc_start
+    local fcc_end
+
+    for variable_name in \
+        wizard_hostname wizard_r2h_token wizard_cors_allow_origin \
+        wizard_status_page_path wizard_player_page_path wizard_upstream_interface \
+        wizard_upstream_interface_multicast wizard_upstream_interface_fcc \
+        wizard_upstream_interface_rtsp wizard_upstream_interface_http \
+        wizard_external_m3u wizard_access_log wizard_log_format wizard_pid_file \
+        wizard_http_proxy_user_agent wizard_rtsp_user_agent wizard_rtsp_stun_server \
+        wizard_ffmpeg_path wizard_ffmpeg_args; do
+        value="${!variable_name:-}"
+        case "${value}" in
+        *$'\n'*|*$'\r'*)
+            return_with_message "配置项 ${variable_name} 不能包含换行符"
+            return $?
+            ;;
+        esac
+    done
+
+    for variable_name in \
+        wizard_upstream_interface wizard_upstream_interface_multicast \
+        wizard_upstream_interface_fcc wizard_upstream_interface_rtsp \
+        wizard_upstream_interface_http; do
+        value="${!variable_name:-}"
+        if [ "${#value}" -gt 15 ]; then
+            return_with_message "配置项 ${variable_name} 的接口名称不能超过 15 个字符"
+            return $?
+        fi
+    done
+
     if [ -n "${SERVICE_PORT}" ] && [ "${SERVICE_PORT}" != "0" ] && ! [[ "${SERVICE_PORT}" =~ ^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4})$ ]]; then
         return_with_message "服务监听端口必须为空、0 或 0-65535 之间的数字"
         return $?
     fi
 
-    if ! [[ "${UDP_RCVBUF_SIZE}" =~ ^[0-9]+$ ]] || [ "${UDP_RCVBUF_SIZE}" -lt 65536 ]; then
+    if ! [[ "${wizard_verbosity}" =~ ^[0-4]$ ]]; then
+        return_with_message "日志详细程度必须为 0-4 之间的数字"
+        return $?
+    fi
+
+    if ! [[ "${wizard_maxclients}" =~ ^[1-9][0-9]{0,2}$ ]] || [ "${wizard_maxclients}" -gt 256 ] ||
+        ! [[ "${wizard_workers}" =~ ^[1-9][0-9]?$ ]] || [ "${wizard_workers}" -gt 32 ]; then
+        return_with_message "最大客户端数必须为 1-256，工作进程数必须为 1-32"
+        return $?
+    fi
+
+    if ! is_uint32_decimal "${wizard_external_m3u_update_interval}" ||
+        ! is_uint32_decimal "${wizard_mcast_rejoin_interval}" ||
+        ! is_positive_uint32_decimal "${wizard_buffer_pool_max_size}"; then
+        return_with_message "更新间隔、组播重加间隔和缓冲池大小必须为非负整数"
+        return $?
+    fi
+
+    if ! [[ "${wizard_fcc_port_range}" =~ ^([0-9]{1,5})(-([0-9]{1,5}))?$ ]]; then
+        return_with_message "FCC UDP 监听端口必须为单个端口或起始端口-结束端口"
+        return $?
+    fi
+    fcc_start="${BASH_REMATCH[1]}"
+    fcc_end="${BASH_REMATCH[3]:-${fcc_start}}"
+    if [ "${fcc_start}" -lt 1 ] || [ "${fcc_end}" -lt 1 ] ||
+        [ "${fcc_start}" -gt 65535 ] || [ "${fcc_end}" -gt 65535 ] || [ "${fcc_start}" -gt "${fcc_end}" ]; then
+        return_with_message "FCC UDP 监听端口范围必须位于 1-65535 且起始端口不大于结束端口"
+        return $?
+    fi
+
+    if ! is_uint32_decimal "${UDP_RCVBUF_SIZE}" || [ "${UDP_RCVBUF_SIZE}" -lt 65536 ]; then
         return_with_message "UDP 接收缓冲区大小必须为不小于 65536 的数字"
         return $?
     fi
+
+    for variable_name in wizard_udpxy wizard_xff wizard_use_relative_path_in_m3u wizard_zerocopy_on_send wizard_video_snapshot; do
+        value="${!variable_name}"
+        if [ "${value}" != "true" ] && [ "${value}" != "false" ]; then
+            return_with_message "配置项 ${variable_name} 必须为 true 或 false"
+            return $?
+        fi
+    done
+
+    if [ "${wizard_external_m3u_mode}" != "custom" ] && [ "${wizard_external_m3u_mode}" != "default" ]; then
+        return_with_message "外部 M3U 地址处理方式必须为 custom 或 default"
+        return $?
+    fi
+
+    case "${wizard_external_m3u}" in
+    file://*|http://*|https://*) ;;
+    *)
+        return_with_message "外部 M3U 地址必须使用 file://、http:// 或 https://"
+        return $?
+        ;;
+    esac
 
     return 0
 }
@@ -158,29 +280,33 @@ generate_rtp2httpd_config() {
     local log_tag="$1"
     local cors_default="$2"
     local action="${3:-生成}"
+    local temp_config
 
     init_config_values "${cors_default}"
     validate_config_values || return $?
 
     log_msg "[${log_tag}] ${action}配置文件: $CONF_FILE"
-    if ! rm -f "$CONF_FILE"; then
-        return_with_message "删除旧配置文件失败: ${CONF_FILE}"
+    if ! temp_config="$(mktemp "${CONF_FILE}.tmp.XXXXXX")"; then
+        return_with_message "创建临时配置文件失败: ${CONF_FILE}"
         return $?
     fi
 
-    if ! cat > "$CONF_FILE" <<EOF
+    if ! cat > "${temp_config}" <<EOF
 [global]
 # 日志详细程度: 0=FATAL 1=ERROR 2=WARN 3=INFO 4=DEBUG
-verbosity = ${wizard_verbosity:-3}
+verbosity = ${wizard_verbosity}
+
+# supervisor PID 文件路径（留空表示禁用）
+pid-file = ${PID_FILE_CONFIG}
 
 # 最大并发客户端数
-maxclients = ${wizard_maxclients:-20}
+maxclients = ${wizard_maxclients}
 
 # UDPxy 兼容性
-udpxy = ${wizard_udpxy:-true}
+udpxy = ${wizard_udpxy}
 
 # 工作进程数（默认: 1）
-workers = ${wizard_workers:-1}
+workers = ${wizard_workers}
 
 # 公网访问建议
 # 检查 HTTP 请求的 Host 头 (默认：无)
@@ -189,7 +315,7 @@ hostname = ${wizard_hostname:-}
 # 启用后，将使用 HTTP X-Forwarded-For 头作为客户端地址，用于显示在状态面板上 (默认：no)
 # 并接受 X-Forwarded-Host / X-Forwarded-Proto 头作为 playlist.m3u 中的地址前缀
 # 飞牛统一网关以反向代理方式访问本应用，因此默认启用
-xff = ${wizard_xff:-true}
+xff = ${wizard_xff}
 
 # HTTP 请求认证令牌（可选，默认: 无）
 # 设置后，所有 HTTP 请求必须携带 r2h-token 查询参数，且值与此配置匹配
@@ -203,17 +329,17 @@ r2h-token = ${wizard_r2h_token:-}
 cors-allow-origin = ${CORS_ALLOW_ORIGIN}
 
 # 状态页路径（默认: /status）
-status-page-path = ${wizard_status_page_path:-/status}
+status-page-path = ${wizard_status_page_path}
 
 # 播放器页路径（默认: /player）
-player-page-path = ${wizard_player_page_path:-/player}
+player-page-path = ${wizard_player_page_path}
 
 # 统一网关公开访问前缀
 app-path-prefix = ${APP_PATH_PREFIX}
 
 # M3U 输出使用站点根相对路径（默认: false）
 # 开启后，playlist.m3u 和 HTTP 代理改写后的 M3U 中不会包含 http://host 前缀
-use-relative-path-in-m3u = ${wizard_use_relative_path_in_m3u:-false}
+use-relative-path-in-m3u = ${wizard_use_relative_path_in_m3u}
 
 # 上游网络接口配置 (可选)
 # 简单配置：只配置一个默认接口，所有流量类型都使用此接口
@@ -229,7 +355,7 @@ use-relative-path-in-m3u = ${wizard_use_relative_path_in_m3u:-false}
 # upstream-interface-fcc = eth1
 #
 # 优先级：upstream-interface-{multicast,fcc,rtsp,http} > upstream-interface > 系统路由表
-upstream-interface = ${wizard_upstream_interface:-enp2s0}
+upstream-interface = ${wizard_upstream_interface}
 upstream-interface-multicast = ${UPSTREAM_INTERFACE_MULTICAST}
 upstream-interface-fcc = ${UPSTREAM_INTERFACE_FCC}
 upstream-interface-rtsp = ${UPSTREAM_INTERFACE_RTSP}
@@ -237,11 +363,11 @@ upstream-interface-http = ${UPSTREAM_INTERFACE_HTTP}
 
 # 外部 M3U 配置（支持 file://, http://, https://）
 # 注意：HTTP/HTTPS 需要安装 curl、uclient-fetch 或 wget 命令
-external-m3u = ${wizard_external_m3u:-file://${TRIM_PKGHOME}/player-list.m3u}
+external-m3u = ${wizard_external_m3u}
 
 # 外部 M3U 更新间隔（秒）
 # 默认 7200（2 小时），设为 0 禁用自动更新
-external-m3u-update-interval = ${wizard_external_m3u_update_interval:-7200}
+external-m3u-update-interval = ${wizard_external_m3u_update_interval}
 
 # 组播周期性重新加入间隔（秒，默认: 0 禁用）
 # 设置为正值（如 60）以周期性重新加入组播组
@@ -251,15 +377,15 @@ external-m3u-update-interval = ${wizard_external_m3u_update_interval:-7200}
 # 推荐值: 30-120 秒（小于典型交换机超时 260 秒）
 # 注意：默认禁用（0），仅在遇到组播流中断时才需要启用
 # 注意：不支持 IPv6
-mcast-rejoin-interval = ${wizard_mcast_rejoin_interval:-0}
+mcast-rejoin-interval = ${wizard_mcast_rejoin_interval}
 
 # FCC 监听媒体流端口范围（可选，格式: 起始-结束，默认随机端口）
-fcc-listen-port-range = ${wizard_fcc_port_range:-40000-40100}
+fcc-listen-port-range = ${wizard_fcc_port_range}
 
 # 缓冲池最大缓冲区数量（默认: 16384）
 # 每个缓冲区 1536 字节，16384 个约占用 24MB 内存
 # 增大此值以提高多客户端并发时的吞吐量，例如设置为 32768 或更高
-buffer-pool-max-size = ${wizard_buffer_pool_max_size:-16384}
+buffer-pool-max-size = ${wizard_buffer_pool_max_size}
 
 # UDP socket 接收缓冲区大小（默认: 524288 = 512KB）
 # 作用于组播、FCC、RTSP RTP/RTCP 所有 UDP socket
@@ -268,10 +394,13 @@ buffer-pool-max-size = ${wizard_buffer_pool_max_size:-16384}
 # 实际缓冲区大小可能受内核参数 net.core.rmem_max 限制
 udp-rcvbuf-size = ${UDP_RCVBUF_SIZE}
 
+# 零拷贝发送（统一网关使用 Unix socket 时程序会自动禁用）
+zerocopy-on-send = ${wizard_zerocopy_on_send}
+
 # 访问日志文件路径（留空或不配置时禁用）
 access-log = ${ACCESS_LOG}
 
-# 访问日志格式（可选，nginx 风格 $变量）
+# 访问日志格式（可选，nginx 风格 \$变量）
 # 默认: \$client_addr [\$time_iso8601] "\$service_url" \$service_type "\$upstream_url"
 log-format = ${LOG_FORMAT}
 
@@ -290,43 +419,52 @@ rtsp-stun-server = ${RTSP_STUN_SERVER}
 
 # 启用视频快照功能（默认: yes）
 # 启用后可通过 \`snapshot=1\` 查询参数获取视频流的实时快照
-video-snapshot = ${wizard_video_snapshot:-true}
+video-snapshot = ${wizard_video_snapshot}
 
 # FFmpeg 可执行文件路径（默认: ffmpeg，使用系统 PATH）
 # 如果 ffmpeg 不在 PATH 中或想使用特定版本，请指定完整路径
-ffmpeg-path = ${wizard_ffmpeg_path:-/usr/bin/ffmpeg}
+ffmpeg-path = ${wizard_ffmpeg_path}
 
 # FFmpeg 额外参数（默认: -hwaccel none）
 # 这些参数在生成快照时传递给 ffmpeg
 # 常用选项: -hwaccel none, -hwaccel auto, -hwaccel vaapi, -hwaccel qsv
-ffmpeg-args = ${wizard_ffmpeg_args:--hwaccel none}
+ffmpeg-args = ${wizard_ffmpeg_args}
 
 EOF
     then
+        rm -f "${temp_config}"
         return_with_message "写入配置文件失败: ${CONF_FILE}"
         return $?
     fi
 
-    if ! cat >> "$CONF_FILE" <<EOF
+    if ! cat >> "${temp_config}" <<EOF
 [bind]
 # 监听统一网关转发的 Unix domain socket
 ${GATEWAY_SOCKET}
 EOF
     then
+        rm -f "${temp_config}"
         return_with_message "写入统一网关监听配置失败: ${CONF_FILE}"
         return $?
     fi
 
     if [ -n "${SERVICE_PORT}" ] && [ "${SERVICE_PORT}" != "0" ]; then
-        if ! cat >> "$CONF_FILE" <<EOF
+        if ! cat >> "${temp_config}" <<EOF
 
 # 可选 TCP 监听端口
 * ${SERVICE_PORT}
 EOF
         then
+            rm -f "${temp_config}"
             return_with_message "写入 TCP 监听端口配置失败: ${CONF_FILE}"
             return $?
         fi
+    fi
+
+    if ! chmod 0600 "${temp_config}" || ! mv -f "${temp_config}" "${CONF_FILE}"; then
+        rm -f "${temp_config}"
+        return_with_message "原子替换配置文件失败: ${CONF_FILE}"
+        return $?
     fi
 
     log_msg "[${log_tag}] 配置生成成功"
